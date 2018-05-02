@@ -5,6 +5,21 @@ Tool for logging RGB-D data from the ASUS Xtion Pro Live with OpenNI2
 
 Should build on Linux, MacOS and Windows. Haven't built on Windows yet though, so someone feel free try it out!
 
+## Dependencies
+```bash
+sudo apt update
+sudo apt install cmake 
+sudo apt-get install qt4-dev-tools
+sudo apt-get install libboost-all-dev
+sudo apt-get install zlib1g-dev
+
+sudo apt-get install libusb-1.0-0-dev
+sudo apt-get install libudev-dev
+git clone https://github.com/occipital/OpenNI2
+```
+
+https://sourceforge.net/projects/opencvlibrary/files/opencv-unix/2.4.9/opencv-2.4.9.zip/download
+
 Requires CMake, Boost, Qt4, OpenNI2, ZLIB and OpenCV. 
 
 Grabs RGB and depth frames which can then be compressed (lossless ZLIB on depth and JPEG on RGB) or uncompressed. 
