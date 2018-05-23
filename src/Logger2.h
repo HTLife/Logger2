@@ -49,6 +49,10 @@
 #include "mscl/Exceptions.h"
 #include "mscl/MicroStrain/MIP/MipTypes.h"
 
+#include "common.h"
+#include "common_3d.h"
+#include "JPEGLoader.h"
+#include <zlib.h>
 
 #include <fstream>
 #include <sstream>
@@ -146,7 +150,7 @@ private:
 class Logger2
 {
     public:
-        Logger2(int width, int height, int fps, bool tcp);
+        Logger2(int width, int height, int fps, bool tcp, std::string logFolder);
         virtual ~Logger2();
 
         void startWriting(std::string filename);
@@ -194,6 +198,7 @@ class Logger2
         boost::mutex mutex_imu;//imu
         IMURecord current_record;
 
+        std::string logFolder;
         std::string filename;
         int64_t lastTimestamp;
 
@@ -220,7 +225,8 @@ class Logger2
                      unsigned char * depthData,
                      unsigned char * rgbData);
 
-
+        void klgToPng(std::string inputFile,
+                      std::string outputDir);
 
         IMURecordList imuRecordList;
 

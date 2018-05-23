@@ -369,7 +369,7 @@ void MainWindow::timerCallback()
     {
         if(frameStats.size() >= 15)
         {
-            logger = new Logger2(width, height, fps, tcp);
+            logger = new Logger2(width, height, fps, tcp, this->logFolder);
 
             if(!logger->getOpenNI2Interface()->ok())
             {

@@ -6,6 +6,7 @@ find_package(Boost COMPONENTS thread REQUIRED)
 find_package(Boost COMPONENTS filesystem REQUIRED)
 find_package(Boost COMPONENTS system REQUIRED)
 find_package(Boost COMPONENTS date_time REQUIRED)
+find_package( Eigen3 REQUIRED )
 
 include(${QT_USE_FILE})
  
@@ -19,6 +20,8 @@ ENDIF (UNIX)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/OpenNI2/Include)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${ZLIB_INCLUDE_DIR})
+
+include_directories(${EIGEN_INCLUDE_DIRS})
 
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
@@ -62,6 +65,8 @@ set(CMAKE_EXE_LINKER_FLAGS "-Wl,-rpath,. -L${CMAKE_CURRENT_BINARY_DIR}")
 set(srcs main.cpp
          Logger2.cpp
          Communicator.cpp
+         common.cpp
+         common_3d.cpp
          ${CMAKE_CURRENT_SOURCE_DIR}/OpenNI2/OpenNI2Interface.cpp)
 
 
@@ -74,7 +79,7 @@ set(MSCL_LIB "/home/rvl/code/MSCL/Output/C++/Release/libmscl.so")
 
 add_executable(Logger2 ${main_moc_SRCS} ${srcs})
 
-target_link_libraries(Logger2                       
+target_link_libraries(Logger2 -ljpeg                       
                       ${ZLIB_LIBRARY}
                       ${Boost_LIBRARIES}
                       ${OpenCV_LIBS} 
