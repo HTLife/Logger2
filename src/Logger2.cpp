@@ -19,6 +19,11 @@ Logger2::Logger2(int width, int height, int fps, bool tcp)
    logToMemory(false),
    compressed(true)
 {
+
+    imuRecordList.clear();
+    imuThread = new boost::thread(boost::bind(&Logger2::imuLogThread,
+                                                    this));
+
     depth_compress_buf_size = width * height * sizeof(int16_t) * 4;
     depth_compress_buf = (uint8_t*)malloc(depth_compress_buf_size);
 
@@ -38,6 +43,7 @@ Logger2::Logger2(int width, int height, int fps, bool tcp)
         tcpBuffer = 0;
         this->tcp = 0;
     }
+
 }
 
 Logger2::~Logger2()
@@ -129,11 +135,18 @@ void Logger2::stopWriting(QWidget * parent)
         fclose(logFile);
     }
 
+    /// Save imu record to file
+
     writeThread = 0;
 
     logFile = 0;
 
     numFrames = 0;
+
+
+    //this->filename
+    imuRecordList.save(this->filename + ".txt");
+    imuRecordList.clear();
 }
 
 void Logger2::loggingThread()
@@ -234,6 +247,81 @@ void Logger2::loggingThread()
     }
 }
 
+void Logger2::imuLogThread()
+{
+
+    const std::string COM_PORT = "/dev/ttyACM0";
+    try
+    {
+    //create a SerialConnection with the COM port
+    mscl::Connection connection = mscl::Connection::Serial(COM_PORT);
+
+    //create an InertialNode with the connection
+    mscl::InertialNode node(connection);
+
+    //Put the Inertial Node into its idle state
+    //  (This is not required but reduces the parsing
+    //  burden during initialization and makes visual
+    //  confirmation of the commands easier.)
+    node.setToIdle();
+
+    //build up the channels to set
+    //mscl::InertialChannels sensorChs;
+    mscl::MipChannels sensorChs;
+
+    sensorChs.push_back(mscl::MipChannel(mscl::MipTypes::CH_FIELD_SENSOR_SCALED_ACCEL_VEC, mscl::SampleRate::Hertz(100)));
+
+    sensorChs.push_back(mscl::MipChannel(mscl::MipTypes::CH_FIELD_SENSOR_SCALED_GYRO_VEC, mscl::SampleRate::Hertz(100)));
+
+    //set the active channels for the Sensor category on the Node
+    node.setActiveChannelFields(mscl::MipTypes::CLASS_AHRS_IMU, sensorChs);
+
+    //start sampling on the Sensor category of the Node
+    node.enableDataStream(mscl::MipTypes::CLASS_AHRS_IMU);
+
+
+    bool bStartFlag = false;
+    //endless loop of reading in data
+    while(true)
+    {
+        if (false == bStartFlag)
+        {
+            bStartFlag = true;
+            std::cout << "Start IMU recording" << std::endl;
+        }
+        mscl::MipDataPoints data;
+        //get all the data packets from the node, with a timeout of 500 milliseconds
+        mscl::MipDataPackets packets = node.getDataPackets(500);
+
+        for(mscl::MipDataPacket packet : packets)
+        {
+            data = packet.data();
+            assert(data.size() == 6);
+            if (data.size() != 6)
+            {
+                printf("assert fail");
+                exit(1);
+            }
+
+            mutex_imu.lock();
+            current_record.setRecord(
+                        data[0].as_double(),
+                        data[1].as_double(),
+                        data[2].as_double(),
+                        data[3].as_double(),
+                        data[4].as_double(),
+                        data[5].as_double());
+            mutex_imu.unlock();
+        }
+    }
+    }
+    catch(mscl::Error& e)
+    {
+        std::cout << "Error: " << e.what() << std::endl;
+    }
+
+}
+
 void Logger2::logData(int64_t * timestamp,
                       int32_t * depthSize,
                       int32_t * imageSize,
@@ -245,4 +333,9 @@ void Logger2::logData(int64_t * timestamp,
     fwrite(imageSize, sizeof(int32_t), 1, logFile);
     fwrite(depthData, *depthSize, 1, logFile);
     fwrite(rgbData, *imageSize, 1, logFile);
+
+    mutex_imu.lock();
+    current_record.setTime(*timestamp);
+    imuRecordList.append(current_record);
+    mutex_imu.unlock();
 }

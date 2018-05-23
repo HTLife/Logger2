@@ -27,6 +27,17 @@ set(BOOST_ALL_DYN_LINK ON)   # force dynamic linking for all libraries
 
 set(CMAKE_CXX_FLAGS "-O3 -msse2 -msse3")
 
+
+  if (CMAKE_VERSION VERSION_LESS "3.1")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
+    endif ()
+  else ()
+    set (CMAKE_CXX_STANDARD 11)
+  endif ()
+
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
 #Magic hack to check if host is 32 or 64 bit
 if(APPLE)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/OpenNI2/libOpenNI2.dylib ${CMAKE_CURRENT_BINARY_DIR}/libOpenNI2.dylib COPYONLY)
@@ -53,6 +64,14 @@ set(srcs main.cpp
          Communicator.cpp
          ${CMAKE_CURRENT_SOURCE_DIR}/OpenNI2/OpenNI2Interface.cpp)
 
+
+set(MSCL_INC "/home/rvl/code/MSCL/MSCL/source") 
+
+include_directories(${MSCL_INC})
+
+set(MSCL_LIB "/home/rvl/code/MSCL/Output/C++/Release/libmscl.so")
+#LINK_DIRECTORIES("/home/rvl/code/MSCL/Output/C++/Release")
+
 add_executable(Logger2 ${main_moc_SRCS} ${srcs})
 
 target_link_libraries(Logger2                       
@@ -60,6 +79,7 @@ target_link_libraries(Logger2
                       ${Boost_LIBRARIES}
                       ${OpenCV_LIBS} 
                       ${QT_LIBRARIES}
+                      ${MSCL_LIB}
                       boost_system
                       boost_filesystem
                       boost_thread

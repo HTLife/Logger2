@@ -41,6 +41,108 @@
 #include "TcpHandler.h"
 #endif
 
+
+#include "mscl/Types.h"
+
+#include "mscl/Communication/Connection.h"
+#include "mscl/MicroStrain/Inertial/InertialNode.h"
+#include "mscl/Exceptions.h"
+#include "mscl/MicroStrain/MIP/MipTypes.h"
+
+
+#include <fstream>
+#include <sstream>
+
+class IMURecord
+{
+public:
+    IMURecord()
+    {
+        this->timestamp = 0;
+        this->ax = 0;
+        this->ay = 0;
+        this->az = 0;
+        this->wx = 0;
+        this->wy = 0;
+        this->wz = 0;
+    }
+
+    void setTime(int64_t timestamp)
+    {
+        this->timestamp = timestamp;
+    }
+
+    void setRecord(double ax,
+                   double ay,
+                   double az,
+                   double wx,
+                   double wy,
+                   double wz)
+    {
+        this->ax = ax;
+        this->ay = ay;
+        this->az = az;
+        this->wx = wx;
+        this->wy = wy;
+        this->wz = wz;
+    }
+
+    std::string getStr() {
+        std::string s = "";
+
+        std::ostringstream strs;
+        strs << timestamp << ", "
+             << wx << ", "
+             << wy << ", "
+             << wz << ", "
+             << ax << ", "
+             << ay << ", "
+             << az;
+        s = strs.str();
+        //std::cout << s << std::endl << std::endl;
+        return s;
+    }
+private:
+    int64_t timestamp;
+    double ax;
+    double ay;
+    double az;
+
+    double wx;
+    double wy;
+    double wz;
+};
+
+class IMURecordList
+{
+public:
+    void append(IMURecord record){
+        this->vIMU_records.push_back(record);
+    }
+    void clear(){
+        this->vIMU_records.clear();
+    }
+    void save(std::string savepath)
+    {
+        std::cout << "Format time,wx,wy,wz,ax,ay,az" << std::endl;
+        std::cout << "Amount of records: "
+                  << this->vIMU_records.size() << std::endl;
+
+        std::ofstream myfile;
+        myfile.open (savepath, std::ios::out);
+        std::vector<IMURecord>::iterator it;
+        for(it= this->vIMU_records.begin();
+            it!=this->vIMU_records.end();
+            it++)
+        {
+            myfile << it->getStr() << "\n";
+        }
+        myfile.close();
+    }
+private:
+    std::vector<IMURecord> vIMU_records;
+};
+
 class Logger2
 {
     public:
@@ -86,7 +188,12 @@ class Logger2
 
         int lastWritten;
         boost::thread * writeThread;
+        boost::thread * imuThread;//imu
         ThreadMutexObject<bool> writing;
+
+        boost::mutex mutex_imu;//imu
+        IMURecord current_record;
+
         std::string filename;
         int64_t lastTimestamp;
 
@@ -99,6 +206,7 @@ class Logger2
 
         void encodeJpeg(cv::Vec<unsigned char, 3> * rgb_data);
         void loggingThread();
+        void imuLogThread();
 
         FILE * logFile;
         int32_t numFrames;
@@ -111,6 +219,11 @@ class Logger2
                      int32_t * imageSize,
                      unsigned char * depthData,
                      unsigned char * rgbData);
+
+
+
+        IMURecordList imuRecordList;
+
 };
 
 #endif /* LOGGER2_H_ */
