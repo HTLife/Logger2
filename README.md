@@ -5,21 +5,55 @@ Tool for logging RGB-D data from the ASUS Xtion Pro Live with OpenNI2
 
 Should build on Linux, MacOS and Windows. Haven't built on Windows yet though, so someone feel free try it out!
 
+
 ## Dependencies
+
+### Installing Boost and Boost.Build
+https://github.com/LORD-MicroStrain/MSCL/blob/master/BuildScripts/buildReadme_Linux.md
+
+1. Download boost_1_64_0.tar.bz2
+2. In the folder to put boost, run:
+   `tar --bzip2 -xf /path/to/boost_1_64_0.tar.bz2`
+3. `cd to boost directory`
+4. `./bootstrap.sh --prefix=path/to/installation/prefix`
+5. `./b2 install`
+
+
+### MSCL
+
+```bash
+git clone https://github.com/LORD-MicroStrain/MSCL.git
+# update the path below to match your boost lib path
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/jenkins/boost/boost_1.64.0_installed/lib
+
+#build using bjam/boost.build
+#Note: pass the following flags to bjam if desired:
+#  --without-ssl           //removes OpenSSL dependency
+#  --without-websockets    //removes Beast dependency
+bjam MSCL//stage_c++ release --without-ssl --without-websocketsbjam MSCL//stage_c++ release
+```
+
+### Logger
+
 ```bash
 sudo apt update
 sudo apt install cmake 
 sudo apt-get install qt4-dev-tools
 sudo apt-get install libboost-all-dev
 sudo apt-get install zlib1g-dev
+sudo apt-get install libglm-dev
+sudo apt-get install gtk2-engines-pixbuf gnome-themes-standard
 
 sudo apt-get install libusb-1.0-0-dev
 sudo apt-get install libudev-dev
 git clone https://github.com/occipital/OpenNI2
-```
+
 
 https://sourceforge.net/projects/opencvlibrary/files/opencv-unix/2.4.9/opencv-2.4.9.zip/download
-cmake -D BUILD_NEW_PYTHON_SUPPORT=OFF -D WITH_OPENCL=OFF -D WITH_OPENMP=ON -D INSTALL_C_EXAMPLES=OFF -D BUILD_DOCS=OFF -D BUILD_EXAMPLES=OFF -D WITH_QT=OFF -D WITH_OPENGL=OFF -D WITH_VTK=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_TESTS=OFF -D WITH_CUDA=OFF -D BUILD_opencv_gpu=OFF ..
+cmake -D BUILD_NEW_PYTHON_SUPPORT=OFF -D WITH_OPENCL=OFF -D WITH_OPENMP=ON -D INSTALL_C_EXAMPLES=OFF -D BUILD_DOCS=OFF -D BUILD_EXAMPLES=OFF -D WITH_QT=ON -D WITH_OPENGL=OFF -D WITH_VTK=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_TESTS=OFF -D WITH_CUDA=OFF -D BUILD_opencv_gpu=OFF ..
+```
+
+
 
 Requires CMake, Boost, Qt4, OpenNI2, ZLIB and OpenCV. 
 
