@@ -225,11 +225,17 @@ void Logger2::loggingThread()
 
         if(logToMemory)
         {
-            memoryBuffer.addData((unsigned char *)&openNI2Interface->frameBuffers[bufferIndex].second, sizeof(int64_t));
+            int64_t timestamp = openNI2Interface->frameBuffers[bufferIndex].second;
+            memoryBuffer.addData((unsigned char *)&timestamp, sizeof(int64_t));
             memoryBuffer.addData((unsigned char *)&depthSize, sizeof(int32_t));
             memoryBuffer.addData((unsigned char *)&rgbSize, sizeof(int32_t));
             memoryBuffer.addData(depthData, depthSize);
             memoryBuffer.addData(rgbData, rgbSize);
+
+            mutex_imu.lock();
+            current_record.setTime(timestamp);
+            imuRecordList.append(current_record);
+            mutex_imu.unlock();
         }
         else
         {
@@ -278,9 +284,9 @@ void Logger2::imuLogThread()
     //mscl::InertialChannels sensorChs;
     mscl::MipChannels sensorChs;
 
-    sensorChs.push_back(mscl::MipChannel(mscl::MipTypes::CH_FIELD_SENSOR_SCALED_ACCEL_VEC, mscl::SampleRate::Hertz(100)));
+    sensorChs.push_back(mscl::MipChannel(mscl::MipTypes::CH_FIELD_SENSOR_SCALED_ACCEL_VEC, mscl::SampleRate::Hertz(200)));
 
-    sensorChs.push_back(mscl::MipChannel(mscl::MipTypes::CH_FIELD_SENSOR_SCALED_GYRO_VEC, mscl::SampleRate::Hertz(100)));
+    sensorChs.push_back(mscl::MipChannel(mscl::MipTypes::CH_FIELD_SENSOR_SCALED_GYRO_VEC, mscl::SampleRate::Hertz(200)));
 
     //set the active channels for the Sensor category on the Node
     node.setActiveChannelFields(mscl::MipTypes::CLASS_AHRS_IMU, sensorChs);
